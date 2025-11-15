@@ -26,18 +26,18 @@
     </repositories>
 
     <dependencies>
-        <!-- JavaFX Controls -->
+        <!-- JavaFX dependencies for Windows -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
-
-        <!-- JavaFX FXML -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
     </dependencies>
 
@@ -54,7 +54,7 @@
                 </configuration>
             </plugin>
             
-            <!-- JavaFX Maven Plugin -->
+            <!-- JavaFX Maven Plugin to run the UI -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
