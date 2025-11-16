@@ -36,10 +36,12 @@ public class TAView {
         root.setTop(header);
         
         // Main content - labs table
-        root.setCenter(uiController.createTableContainer(uiController.createLabsTable()));
+        TableView<Lab> table = uiController.createLabsTable(user);
+        table.setItems(uiController.getLabsForUser(user, UIController.LabViewMode.ACTIVE_NOW));
+        root.setCenter(uiController.createTableContainer(table));
         
         // Controls - only TA features
-        VBox controls = createControlPanel();
+        VBox controls = createControlPanel(table);
         root.setBottom(controls);
         
         Scene scene = new Scene(root, 1200, 700);
@@ -76,24 +78,29 @@ public class TAView {
         return new VBox(headerPane);
     }
     
-    private VBox createControlPanel() {
+    private VBox createControlPanel(TableView<Lab> table) {
         Button viewAssignedBtn = StyleManager.createStyledButton("📚 View Assigned Labs", StyleManager.PRIMARY_COLOR);
         Button viewTimesheetBtn = StyleManager.createStyledButton("⏱️ View TimeSheet", "#FF9800");
         Button contactHoursBtn = StyleManager.createStyledButton("📊 Contact Hours", "#2196F3");
-        
+
         viewAssignedBtn.setOnAction(e -> openAssignedLabsDialog());
         viewTimesheetBtn.setOnAction(e -> openTimesheetDialog());
         contactHoursBtn.setOnAction(e -> openContactHoursDialog());
-        
-        HBox primaryActions = new HBox(10, viewAssignedBtn, viewTimesheetBtn, contactHoursBtn);
+
+        ChoiceBox<UIController.LabViewMode> viewChoice = new ChoiceBox<>();
+        viewChoice.getItems().addAll(UIController.LabViewMode.ACTIVE_NOW, UIController.LabViewMode.ALL, UIController.LabViewMode.TODAY);
+        viewChoice.setValue(UIController.LabViewMode.ACTIVE_NOW);
+        viewChoice.setOnAction(e -> table.setItems(uiController.getLabsForUser(user, viewChoice.getValue())));
+
+        HBox primaryActions = new HBox(10, viewAssignedBtn, viewTimesheetBtn, contactHoursBtn, new Label(" "), viewChoice);
         primaryActions.setPadding(new Insets(10));
         primaryActions.setStyle("-fx-background-color: " + StyleManager.CARD_BACKGROUND + "; " +
                                "-fx-border-color: " + StyleManager.BORDER_COLOR + "; " +
                                "-fx-border-width: 1 0 0 0;");
-        
+
         VBox controlBox = new VBox(primaryActions);
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
-        
+
         return controlBox;
     }
     

@@ -36,10 +36,12 @@ public class AcademicOfficerView {
         root.setTop(header);
         
         // Main content - labs table
-        root.setCenter(uiController.createTableContainer(uiController.createLabsTable()));
+        TableView<Lab> table = uiController.createLabsTable(user);
+        table.setItems(uiController.getLabsForUser(user, UIController.LabViewMode.ACTIVE_NOW));
+        root.setCenter(uiController.createTableContainer(table));
         
-        // Controls - only Academic Officer features
-        VBox controls = createControlPanel();
+        // Controls - only Academic Officer features (pass table for view toggle)
+        VBox controls = createControlPanel(table);
         root.setBottom(controls);
         
         Scene scene = new Scene(root, 1200, 700);
@@ -76,24 +78,29 @@ public class AcademicOfficerView {
         return new VBox(headerPane);
     }
     
-    private VBox createControlPanel() {
+    private VBox createControlPanel(TableView<Lab> table) {
         Button addLabBtn = StyleManager.createStyledButton("➕ Add Lab", StyleManager.PRIMARY_COLOR);
         Button assignStaffBtn = StyleManager.createStyledButton("👥 Assign Staff", StyleManager.PRIMARY_COLOR);
         Button scheduleBtn = StyleManager.createStyledButton("📅 Set Schedule", "#2196F3");
-        
+
         addLabBtn.setOnAction(e -> uiController.handleAddLab());
         assignStaffBtn.setOnAction(e -> uiController.handleAssignStaff());
         scheduleBtn.setOnAction(e -> openScheduleDialog());
-        
-        HBox primaryActions = new HBox(10, addLabBtn, assignStaffBtn, scheduleBtn);
+
+        ChoiceBox<UIController.LabViewMode> viewChoice = new ChoiceBox<>();
+        viewChoice.getItems().addAll(UIController.LabViewMode.ACTIVE_NOW, UIController.LabViewMode.ALL, UIController.LabViewMode.TODAY);
+        viewChoice.setValue(UIController.LabViewMode.ACTIVE_NOW);
+        viewChoice.setOnAction(e -> table.setItems(uiController.getLabsForUser(user, viewChoice.getValue())));
+
+        HBox primaryActions = new HBox(10, addLabBtn, assignStaffBtn, scheduleBtn, new Label(" "), viewChoice);
         primaryActions.setPadding(new Insets(10));
         primaryActions.setStyle("-fx-background-color: " + StyleManager.CARD_BACKGROUND + "; " +
                                "-fx-border-color: " + StyleManager.BORDER_COLOR + "; " +
                                "-fx-border-width: 1 0 0 0;");
-        
+
         VBox controlBox = new VBox(primaryActions);
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
-        
+
         return controlBox;
     }
     

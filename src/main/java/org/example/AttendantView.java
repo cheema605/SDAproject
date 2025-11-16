@@ -36,10 +36,12 @@ public class AttendantView {
         root.setTop(header);
         
         // Main content - labs table
-        root.setCenter(uiController.createTableContainer(uiController.createLabsTable()));
+        TableView<Lab> table = uiController.createLabsTable(user);
+        table.setItems(uiController.getLabsForUser(user, UIController.LabViewMode.ACTIVE_NOW));
+        root.setCenter(uiController.createTableContainer(table));
         
         // Controls - only Attendant features
-        VBox controls = createControlPanel();
+        VBox controls = createControlPanel(table);
         root.setBottom(controls);
         
         Scene scene = new Scene(root, 1200, 700);
@@ -76,24 +78,29 @@ public class AttendantView {
         return new VBox(headerPane);
     }
     
-    private VBox createControlPanel() {
+    private VBox createControlPanel(TableView<Lab> table) {
         Button enterTimeSheetBtn = StyleManager.createStyledButton("⏱️ Enter TimeSheet", "#FF9800");
         Button approveMakeupBtn = StyleManager.createStyledButton("✓ Approve Makeup", "#4CAF50");
         Button viewMakeupBtn = StyleManager.createStyledButton("📋 View Makeup Requests", "#2196F3");
-        
+
         enterTimeSheetBtn.setOnAction(e -> uiController.handleEnterTimeSheet());
         approveMakeupBtn.setOnAction(e -> openApproveDialog());
         viewMakeupBtn.setOnAction(e -> openMakeupRequestsDialog());
-        
-        HBox primaryActions = new HBox(10, enterTimeSheetBtn, approveMakeupBtn, viewMakeupBtn);
+
+        ChoiceBox<UIController.LabViewMode> viewChoice = new ChoiceBox<>();
+        viewChoice.getItems().addAll(UIController.LabViewMode.ACTIVE_NOW, UIController.LabViewMode.ALL, UIController.LabViewMode.TODAY);
+        viewChoice.setValue(UIController.LabViewMode.ACTIVE_NOW);
+        viewChoice.setOnAction(e -> table.setItems(uiController.getLabsForUser(user, viewChoice.getValue())));
+
+        HBox primaryActions = new HBox(10, enterTimeSheetBtn, approveMakeupBtn, viewMakeupBtn, new Label(" "), viewChoice);
         primaryActions.setPadding(new Insets(10));
         primaryActions.setStyle("-fx-background-color: " + StyleManager.CARD_BACKGROUND + "; " +
                                "-fx-border-color: " + StyleManager.BORDER_COLOR + "; " +
                                "-fx-border-width: 1 0 0 0;");
-        
+
         VBox controlBox = new VBox(primaryActions);
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
-        
+
         return controlBox;
     }
     

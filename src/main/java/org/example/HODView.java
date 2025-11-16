@@ -36,10 +36,12 @@ public class HODView {
         root.setTop(header);
         
         // Main content - labs table
-        root.setCenter(uiController.createTableContainer(uiController.createLabsTable()));
+        TableView<Lab> table = uiController.createLabsTable(user);
+        table.setItems(uiController.getLabsForUser(user, UIController.LabViewMode.ACTIVE_NOW));
+        root.setCenter(uiController.createTableContainer(table));
         
         // Controls - only HOD features (reports)
-        VBox controls = createControlPanel();
+        VBox controls = createControlPanel(table);
         root.setBottom(controls);
         
         Scene scene = new Scene(root, 1200, 700);
@@ -76,26 +78,31 @@ public class HODView {
         return new VBox(headerPane);
     }
     
-    private VBox createControlPanel() {
+    private VBox createControlPanel(TableView<Lab> table) {
         Button weeklyScheduleBtn = StyleManager.createStyledButton("📋 Weekly Schedule Report", "#607D8B");
         Button weeklyTimesheetBtn = StyleManager.createStyledButton("📊 Weekly Timesheet Report", "#607D8B");
         Button labReportBtn = StyleManager.createStyledButton("📈 Lab Semester Report", "#607D8B");
         Button exportBtn = StyleManager.createStyledButton("💾 Export Reports", "#2196F3");
-        
+
         weeklyScheduleBtn.setOnAction(e -> uiController.getReportGenerator().generateWeeklyScheduleReport());
         weeklyTimesheetBtn.setOnAction(e -> uiController.getReportGenerator().generateWeeklyTimeSheetReport());
         labReportBtn.setOnAction(e -> uiController.handleLabReport());
         exportBtn.setOnAction(e -> openExportDialog());
-        
-        HBox reportActions = new HBox(10, weeklyScheduleBtn, weeklyTimesheetBtn, labReportBtn, exportBtn);
+
+        ChoiceBox<UIController.LabViewMode> viewChoice = new ChoiceBox<>();
+        viewChoice.getItems().addAll(UIController.LabViewMode.ACTIVE_NOW, UIController.LabViewMode.ALL, UIController.LabViewMode.TODAY);
+        viewChoice.setValue(UIController.LabViewMode.ACTIVE_NOW);
+        viewChoice.setOnAction(e -> table.setItems(uiController.getLabsForUser(user, viewChoice.getValue())));
+
+        HBox reportActions = new HBox(10, weeklyScheduleBtn, weeklyTimesheetBtn, labReportBtn, exportBtn, new Label(" "), viewChoice);
         reportActions.setPadding(new Insets(10));
         reportActions.setStyle("-fx-background-color: " + StyleManager.CARD_BACKGROUND + "; " +
-                              "-fx-border-color: " + StyleManager.BORDER_COLOR + "; " +
-                              "-fx-border-width: 1 0 0 0;");
-        
+                      "-fx-border-color: " + StyleManager.BORDER_COLOR + "; " +
+                      "-fx-border-width: 1 0 0 0;");
+
         VBox controlBox = new VBox(reportActions);
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
-        
+
         return controlBox;
     }
     

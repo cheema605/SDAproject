@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Priority;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * UIController manages all UI control logic and event handling.
@@ -28,59 +29,168 @@ public class UIController {
         this.repository = repository;
         this.dialogFactory = new DialogFactory(labs);
         this.reportGenerator = new ReportGenerator(labs);
-        this.dataStore = SampleDataInitializer.generateSampleData();
+        try {
+            DataStore ds = repository.load();
+            if (ds.getLabs() == null || ds.getLabs().isEmpty()) {
+                ds = SampleDataInitializer.generateSampleData();
+                repository.save(ds);
+            }
+            this.dataStore = ds;
+        } catch (Exception e) {
+            this.dataStore = SampleDataInitializer.generateSampleData();
+            try { repository.save(this.dataStore); } catch (IOException ignored) {}
+        }
         this.academicOfficer = new AcademicOfficer(dataStore);
         this.labs.setAll(dataStore.getLabs());
     }
+
+    public enum LabViewMode { ALL, ACTIVE_NOW, TODAY }
+
+    /** New mode-based filtering API. */
+    public ObservableList<Lab> getLabsForUser(User user, LabViewMode mode) {
+        ObservableList<Lab> result = FXCollections.observableArrayList();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Lab lab : dataStore.getLabs()) {
+            boolean includeByActive = true;
+            if (mode == LabViewMode.ACTIVE_NOW) {
+                includeByActive = false;
+                Schedule s = lab.getSchedule();
+                if (s != null && s.getExpectedStart() != null && s.getExpectedEnd() != null) {
+                    if (!now.isBefore(s.getExpectedStart()) && !now.isAfter(s.getExpectedEnd())) includeByActive = true;
+                }
+                if (!includeByActive) {
+                    for (TimeSheet ts : lab.getSessions()) {
+                        if (ts.getActualStart() != null && ts.getActualEnd() != null) {
+                            if (!now.isBefore(ts.getActualStart()) && !now.isAfter(ts.getActualEnd())) { includeByActive = true; break; }
+                        }
+                    }
+                }
+            } else if (mode == LabViewMode.TODAY) {
+                includeByActive = false;
+                java.time.LocalDate today = now.toLocalDate();
+                Schedule s = lab.getSchedule();
+                if (s != null && s.getExpectedStart() != null) {
+                    if (s.getExpectedStart().toLocalDate().equals(today)) includeByActive = true;
+                }
+                if (!includeByActive) {
+                    for (TimeSheet ts : lab.getSessions()) {
+                        if (ts.getActualStart() != null) {
+                            if (ts.getActualStart().toLocalDate().equals(today)) { includeByActive = true; break; }
+                        }
+                    }
+                }
+            } // else ALL -> includeByActive stays true
+
+            if (!includeByActive) continue;
+
+            // role-based scoping
+            switch (user.getRole()) {
+                case ACADEMIC_OFFICER:
+                    result.add(lab);
+                    break;
+                case ATTENDANT:
+                    if (lab.getVenue() != null && lab.getVenue().getBuilding() != null
+                            && user.getBuilding() != null
+                            && lab.getVenue().getBuilding().equalsIgnoreCase(user.getBuilding())) {
+                        result.add(lab);
+                    }
+                    break;
+                case HOD:
+                    result.add(lab);
+                    break;
+                case INSTRUCTOR:
+                    if (lab.getInstructor() != null && lab.getInstructor().getName() != null
+                            && lab.getInstructor().getName().equalsIgnoreCase(user.getName())) {
+                        result.add(lab);
+                    }
+                    break;
+                case TA:
+                    for (TA ta : lab.getTas()) {
+                        if (ta.getName() != null && ta.getName().equalsIgnoreCase(user.getName())) {
+                            result.add(lab);
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return result;
+    }
     
-    /**
-     * Creates the main table view for displaying labs.
-     */
     public TableView<Lab> createLabsTable() {
-        TableView<Lab> table = new TableView<>(labs);
+        return createLabsTable(null);
+    }
+
+    /**
+     * Create a table tailored to the given user role. If user is null, full columns are shown.
+     */
+    public TableView<Lab> createLabsTable(User user) {
+        TableView<Lab> table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         table.setStyle(StyleManager.TABLE_STYLE);
-        
-        // Table columns
+
+        // Lab ID
         TableColumn<Lab, String> idCol = new TableColumn<>("Lab ID");
         idCol.setPrefWidth(80);
         idCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
             cell.getValue() == null || cell.getValue().getId() == null ? "" : cell.getValue().getId()));
         idCol.setStyle("-fx-alignment: CENTER;");
-        
+
+        // Lab name
         TableColumn<Lab, String> nameCol = new TableColumn<>("Lab Name");
-        nameCol.setPrefWidth(120);
+        nameCol.setPrefWidth(140);
         nameCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
             cell.getValue() == null || cell.getValue().getName() == null ? "" : cell.getValue().getName()));
-        
+
+        // Venue (building - room)
         TableColumn<Lab, String> venueCol = new TableColumn<>("Location");
-        venueCol.setPrefWidth(140);
+        venueCol.setPrefWidth(160);
         venueCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
             cell.getValue() == null || cell.getValue().getVenue() == null ? "N/A" : cell.getValue().getVenue().toString()));
-        
-        TableColumn<Lab, String> instrCol = new TableColumn<>("Instructor");
-        instrCol.setPrefWidth(120);
-        instrCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
-            cell.getValue() == null || cell.getValue().getInstructor() == null ? "Unassigned" : cell.getValue().getInstructor().getName()));
-        
-        TableColumn<Lab, String> tasCol = new TableColumn<>("Teaching Assistants");
-        tasCol.setPrefWidth(150);
-        tasCol.setCellValueFactory(cell -> {
-            if (cell.getValue() == null || cell.getValue().getTas().isEmpty()) return new javafx.beans.property.SimpleStringProperty("None");
-            StringBuilder sb = new StringBuilder();
-            for (TA ta : cell.getValue().getTas()) {
-                if (sb.length() > 0) sb.append(", ");
-                sb.append(ta.getName());
-            }
-            return new javafx.beans.property.SimpleStringProperty(sb.toString());
-        });
 
-        table.getColumns().add(idCol);
-        table.getColumns().add(nameCol);
-        table.getColumns().add(venueCol);
-        table.getColumns().add(instrCol);
-        table.getColumns().add(tasCol);
-        
+        table.getColumns().addAll(idCol, nameCol, venueCol);
+
+        // Role-specific columns
+        if (user == null || user.getRole() == User.Role.ACADEMIC_OFFICER || user.getRole() == User.Role.HOD) {
+            TableColumn<Lab, String> instrCol = new TableColumn<>("Instructor");
+            instrCol.setPrefWidth(140);
+            instrCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
+                cell.getValue() == null || cell.getValue().getInstructor() == null ? "Unassigned" : cell.getValue().getInstructor().getName()));
+
+            TableColumn<Lab, String> tasCol = new TableColumn<>("Teaching Assistants");
+            tasCol.setPrefWidth(180);
+            tasCol.setCellValueFactory(cell -> {
+                if (cell.getValue() == null || cell.getValue().getTas().isEmpty()) return new javafx.beans.property.SimpleStringProperty("None");
+                StringBuilder sb = new StringBuilder();
+                for (TA ta : cell.getValue().getTas()) {
+                    if (sb.length() > 0) sb.append(", ");
+                    sb.append(ta.getName());
+                }
+                return new javafx.beans.property.SimpleStringProperty(sb.toString());
+            });
+
+            table.getColumns().addAll(instrCol, tasCol);
+        } else if (user.getRole() == User.Role.INSTRUCTOR) {
+            // Instructor sees TAs for their own labs (labs are filtered to instructor), no instructor column
+            TableColumn<Lab, String> tasCol = new TableColumn<>("Teaching Assistants");
+            tasCol.setPrefWidth(160);
+            tasCol.setCellValueFactory(cell -> {
+                if (cell.getValue() == null || cell.getValue().getTas().isEmpty()) return new javafx.beans.property.SimpleStringProperty("None");
+                StringBuilder sb = new StringBuilder();
+                for (TA ta : cell.getValue().getTas()) {
+                    if (sb.length() > 0) sb.append(", ");
+                    sb.append(ta.getName());
+                }
+                return new javafx.beans.property.SimpleStringProperty(sb.toString());
+            });
+            table.getColumns().add(tasCol);
+        }
+
+        // For roles that shouldn't see personnel lists (TA, Attendant), keep minimal columns only
         return table;
     }
     
@@ -258,6 +368,72 @@ public class UIController {
         }
     }
     
+    /**
+     * Returns labs filtered for the given user. If activeOnly is true, only
+     * labs that are currently active (by schedule or ongoing session) are returned.
+     */
+    public ObservableList<Lab> getLabsForUser(User user, boolean activeOnly) {
+        ObservableList<Lab> result = FXCollections.observableArrayList();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Lab lab : dataStore.getLabs()) {
+            // check active state
+            boolean active = true;
+            if (activeOnly) {
+                active = false;
+                Schedule s = lab.getSchedule();
+                if (s != null && s.getExpectedStart() != null && s.getExpectedEnd() != null) {
+                    if (!now.isBefore(s.getExpectedStart()) && !now.isAfter(s.getExpectedEnd())) active = true;
+                }
+                if (!active) {
+                    for (TimeSheet ts : lab.getSessions()) {
+                        if (ts.getActualStart() != null && ts.getActualEnd() != null) {
+                            if (!now.isBefore(ts.getActualStart()) && !now.isAfter(ts.getActualEnd())) { active = true; break; }
+                        }
+                    }
+                }
+            }
+
+            if (!active) continue;
+
+            // role-based scoping
+            switch (user.getRole()) {
+                case ACADEMIC_OFFICER:
+                    result.add(lab);
+                    break;
+                case ATTENDANT:
+                    if (lab.getVenue() != null && lab.getVenue().getBuilding() != null
+                            && user.getBuilding() != null
+                            && lab.getVenue().getBuilding().equalsIgnoreCase(user.getBuilding())) {
+                        result.add(lab);
+                    }
+                    break;
+                case HOD:
+                    // HOD sees all labs for now
+                    result.add(lab);
+                    break;
+                case INSTRUCTOR:
+                    if (lab.getInstructor() != null && lab.getInstructor().getName() != null
+                            && lab.getInstructor().getName().equalsIgnoreCase(user.getName())) {
+                        result.add(lab);
+                    }
+                    break;
+                case TA:
+                    for (TA ta : lab.getTas()) {
+                        if (ta.getName() != null && ta.getName().equalsIgnoreCase(user.getName())) {
+                            result.add(lab);
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return result;
+    }
+
     private void refreshTable() {
         labs.clear();
         labs.addAll(dataStore.getLabs());
