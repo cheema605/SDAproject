@@ -81,9 +81,9 @@ public class InstructorView {
         Button requestMakeupBtn = StyleManager.createStyledButton("🔄 Request Makeup Lab", "#FF9800");
         Button viewScheduleBtn = StyleManager.createStyledButton("📅 View Schedule", "#2196F3");
         
-        viewLabsBtn.setOnAction(e -> AlertHelper.showInfo("My Labs", "View your assigned labs"));
+        viewLabsBtn.setOnAction(e -> openMyLabsDialog());
         requestMakeupBtn.setOnAction(e -> uiController.handleRequestMakeup());
-        viewScheduleBtn.setOnAction(e -> AlertHelper.showInfo("Schedule", "View your lab schedules"));
+        viewScheduleBtn.setOnAction(e -> openScheduleDialog());
         
         HBox primaryActions = new HBox(10, viewLabsBtn, requestMakeupBtn, viewScheduleBtn);
         primaryActions.setPadding(new Insets(10));
@@ -95,6 +95,67 @@ public class InstructorView {
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
         
         return controlBox;
+    }
+    
+    private void openMyLabsDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("My Labs");
+        dialog.setHeaderText("Labs assigned to " + user.getName());
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        ListView<String> labsList = new ListView<>();
+        
+        // Get all labs and filter by this instructor
+        uiController.getLabs().forEach(lab -> {
+            if (lab.getInstructor() != null && lab.getInstructor().getName().equalsIgnoreCase(user.getName())) {
+                String timeStr = lab.getSchedule() != null ? 
+                    lab.getSchedule().getExpectedStart().getHour() + ":00 - " + 
+                    lab.getSchedule().getExpectedEnd().getHour() + ":00" : "TBD";
+                String venueStr = lab.getVenue() != null ? lab.getVenue().getBuilding() + " - " + lab.getVenue().getRoom() : "TBD";
+                labsList.getItems().add(lab.getName() + " - " + timeStr + " - " + venueStr);
+            }
+        });
+        
+        if (labsList.getItems().isEmpty()) {
+            labsList.getItems().add("No labs assigned");
+        }
+        
+        labsList.setPrefHeight(200);
+        
+        content.getChildren().addAll(
+            new Label("Your assigned labs:"),
+            labsList
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+    
+    private void openScheduleDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("My Schedule");
+        dialog.setHeaderText("Your lab schedule for this semester");
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        TextArea scheduleText = new TextArea();
+        scheduleText.setText("Monday: 9:00-11:00 (CS101)\nTuesday: 10:00-12:00 (CS102)\nWednesday: 14:00-16:00 (CS103)");
+        scheduleText.setEditable(false);
+        scheduleText.setWrapText(true);
+        scheduleText.setPrefHeight(200);
+        
+        content.getChildren().addAll(
+            new Label("Lab Schedule:"),
+            scheduleText
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
     }
     
     private void logout() {

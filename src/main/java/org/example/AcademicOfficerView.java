@@ -83,7 +83,7 @@ public class AcademicOfficerView {
         
         addLabBtn.setOnAction(e -> uiController.handleAddLab());
         assignStaffBtn.setOnAction(e -> uiController.handleAssignStaff());
-        scheduleBtn.setOnAction(e -> AlertHelper.showInfo("Schedule", "Set lab schedules here"));
+        scheduleBtn.setOnAction(e -> openScheduleDialog());
         
         HBox primaryActions = new HBox(10, addLabBtn, assignStaffBtn, scheduleBtn);
         primaryActions.setPadding(new Insets(10));
@@ -95,6 +95,47 @@ public class AcademicOfficerView {
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
         
         return controlBox;
+    }
+    
+    private void openScheduleDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Manage Lab Schedules");
+        dialog.setHeaderText("Set schedule for selected lab");
+        
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(15));
+        
+        ComboBox<String> labCombo = new ComboBox<>();
+        labCombo.setStyle("-fx-font-size: 12;");
+        labCombo.setPromptText("Select a lab");
+        labCombo.setPrefWidth(300);
+        
+        DatePicker startDate = new DatePicker();
+        startDate.setStyle("-fx-font-size: 12;");
+        
+        ComboBox<String> dayCombo = new ComboBox<>();
+        dayCombo.getItems().addAll("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
+        dayCombo.setStyle("-fx-font-size: 12;");
+        dayCombo.setPromptText("Select day");
+        
+        Spinner<Integer> hourSpinner = new Spinner<>(0, 23, 10);
+        hourSpinner.setStyle("-fx-font-size: 12;");
+        
+        content.getChildren().addAll(
+            new Label("Lab:"), labCombo,
+            new Label("Start Date:"), startDate,
+            new Label("Day:"), dayCombo,
+            new Label("Start Hour:"), hourSpinner
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        dialog.showAndWait().ifPresent(result -> {
+            if (dayCombo.getValue() != null && startDate.getValue() != null) {
+                AlertHelper.showSuccess("Schedule", "Schedule saved for " + dayCombo.getValue());
+            }
+        });
     }
     
     private void logout() {

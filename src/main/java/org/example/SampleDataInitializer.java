@@ -1,33 +1,31 @@
 package org.example;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SampleDataInitializer {
     
     public static DataStore generateSampleData() {
         DataStore ds = new DataStore();
         
-        // Create instructors
-        Instructor dr_smith = new Instructor("I-001", "Dr. Smith");
-        Instructor dr_jones = new Instructor("I-002", "Dr. Jones");
-        Instructor dr_lee = new Instructor("I-003", "Dr. Sarah Lee");
+        // Create instructors with Pakistani names
+        Instructor dr_ahmed = new Instructor("I-001", "Dr. Ahmed Khan");
+        Instructor dr_fatima = new Instructor("I-002", "Dr. Fatima Ali");
+        Instructor dr_hassan = new Instructor("I-003", "Dr. Hassan Malik");
         
-        ds.getInstructors().add(dr_smith);
-        ds.getInstructors().add(dr_jones);
-        ds.getInstructors().add(dr_lee);
+        ds.getInstructors().add(dr_ahmed);
+        ds.getInstructors().add(dr_fatima);
+        ds.getInstructors().add(dr_hassan);
         
-        // Create TAs
-        TA john_doe = new TA("TA-001", "John Doe");
-        TA jane_doe = new TA("TA-002", "Jane Doe");
-        TA mike_wilson = new TA("TA-003", "Mike Wilson");
-        TA sarah_adams = new TA("TA-004", "Sarah Adams");
+        // Create TAs with Pakistani names
+        TA ali_khan = new TA("TA-001", "Ali Khan");
+        TA sara_hussain = new TA("TA-002", "Sara Hussain");
+        TA usman_baig = new TA("TA-003", "Usman Baig");
+        TA ayesha_malik = new TA("TA-004", "Ayesha Malik");
         
-        ds.getTas().add(john_doe);
-        ds.getTas().add(jane_doe);
-        ds.getTas().add(mike_wilson);
-        ds.getTas().add(sarah_adams);
+        ds.getTas().add(ali_khan);
+        ds.getTas().add(sara_hussain);
+        ds.getTas().add(usman_baig);
+        ds.getTas().add(ayesha_malik);
         
         // Lab 1: Database Systems
         Lab lab1 = new Lab("LAB001", "Database Systems");
@@ -36,9 +34,9 @@ public class SampleDataInitializer {
             LocalDateTime.of(2024, 11, 18, 10, 0),
             LocalDateTime.of(2024, 11, 18, 12, 0)
         ));
-        lab1.setInstructor(dr_smith);
-        lab1.addTA(john_doe);
-        lab1.addTA(jane_doe);
+        lab1.setInstructor(dr_ahmed);
+        lab1.addTA(ali_khan);
+        lab1.addTA(sara_hussain);
         
         // Add sample sessions for Lab 1
         lab1.addSession(new TimeSheet(
@@ -64,8 +62,8 @@ public class SampleDataInitializer {
             LocalDateTime.of(2024, 11, 18, 14, 0),
             LocalDateTime.of(2024, 11, 18, 16, 0)
         ));
-        lab2.setInstructor(dr_jones);
-        lab2.addTA(mike_wilson);
+        lab2.setInstructor(dr_fatima);
+        lab2.addTA(usman_baig);
         
         // Add sample sessions for Lab 2
         lab2.addSession(new TimeSheet(
@@ -90,9 +88,9 @@ public class SampleDataInitializer {
             LocalDateTime.of(2024, 11, 19, 10, 0),
             LocalDateTime.of(2024, 11, 19, 11, 30)
         ));
-        lab3.setInstructor(dr_lee);
-        lab3.addTA(sarah_adams);
-        lab3.addTA(john_doe);
+        lab3.setInstructor(dr_hassan);
+        lab3.addTA(ayesha_malik);
+        lab3.addTA(ali_khan);
         
         // Add sample sessions for Lab 3
         lab3.addSession(new TimeSheet(

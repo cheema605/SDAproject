@@ -266,4 +266,8 @@ public class UIController {
     public ReportGenerator getReportGenerator() {
         return reportGenerator;
     }
+    
+    public ObservableList<Lab> getLabs() {
+        return labs;
+    }
 }

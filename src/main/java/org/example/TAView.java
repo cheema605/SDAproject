@@ -81,9 +81,9 @@ public class TAView {
         Button viewTimesheetBtn = StyleManager.createStyledButton("⏱️ View TimeSheet", "#FF9800");
         Button contactHoursBtn = StyleManager.createStyledButton("📊 Contact Hours", "#2196F3");
         
-        viewAssignedBtn.setOnAction(e -> AlertHelper.showInfo("Assigned Labs", "View labs you're assigned to"));
-        viewTimesheetBtn.setOnAction(e -> AlertHelper.showInfo("TimeSheet", "View recorded timesheets"));
-        contactHoursBtn.setOnAction(e -> AlertHelper.showInfo("Contact Hours", "View your total contact hours"));
+        viewAssignedBtn.setOnAction(e -> openAssignedLabsDialog());
+        viewTimesheetBtn.setOnAction(e -> openTimesheetDialog());
+        contactHoursBtn.setOnAction(e -> openContactHoursDialog());
         
         HBox primaryActions = new HBox(10, viewAssignedBtn, viewTimesheetBtn, contactHoursBtn);
         primaryActions.setPadding(new Insets(10));
@@ -95,6 +95,99 @@ public class TAView {
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
         
         return controlBox;
+    }
+    
+    private void openAssignedLabsDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Assigned Labs");
+        dialog.setHeaderText("Labs you are assigned to assist");
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        ListView<String> labsList = new ListView<>();
+        
+        // Get all labs and filter by this TA
+        uiController.getLabs().forEach(lab -> {
+            for (TA ta : lab.getTas()) {
+                if (ta.getName().equalsIgnoreCase(user.getName())) {
+                    String timeStr = lab.getSchedule() != null ? 
+                        lab.getSchedule().getExpectedStart().getHour() + ":00 - " + 
+                        lab.getSchedule().getExpectedEnd().getHour() + ":00" : "TBD";
+                    String instructorStr = lab.getInstructor() != null ? lab.getInstructor().getName() : "TBD";
+                    labsList.getItems().add(lab.getName() + " - " + timeStr + " (Instructor: " + instructorStr + ")");
+                    break;
+                }
+            }
+        });
+        
+        if (labsList.getItems().isEmpty()) {
+            labsList.getItems().add("No labs assigned");
+        }
+        
+        labsList.setPrefHeight(200);
+        
+        content.getChildren().addAll(
+            new Label("Your assigned labs:"),
+            labsList
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+    
+    private void openTimesheetDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("My TimeSheet");
+        dialog.setHeaderText("Your recorded work hours");
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        TextArea timesheetText = new TextArea();
+        timesheetText.setText("Week 1: 10 hours\nWeek 2: 12 hours\nWeek 3: 11 hours\nTotal: 33 hours");
+        timesheetText.setEditable(false);
+        timesheetText.setWrapText(true);
+        timesheetText.setPrefHeight(200);
+        
+        content.getChildren().addAll(
+            new Label("Time Sheet Summary:"),
+            timesheetText
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+    
+    private void openContactHoursDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Contact Hours");
+        dialog.setHeaderText("Your contact hours summary");
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        TextArea hoursText = new TextArea();
+        hoursText.setText("Total Contact Hours: 33 hours\n" +
+                         "CS101: 11 hours\n" +
+                         "CS102: 12 hours\n" +
+                         "CS103: 10 hours\n" +
+                         "Required: 40 hours\n" +
+                         "Progress: 82.5%");
+        hoursText.setEditable(false);
+        hoursText.setWrapText(true);
+        hoursText.setPrefHeight(220);
+        
+        content.getChildren().addAll(
+            new Label("Contact Hours Tracking:"),
+            hoursText
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
     }
     
     private void logout() {

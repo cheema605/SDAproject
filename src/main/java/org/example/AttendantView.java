@@ -82,8 +82,8 @@ public class AttendantView {
         Button viewMakeupBtn = StyleManager.createStyledButton("📋 View Makeup Requests", "#2196F3");
         
         enterTimeSheetBtn.setOnAction(e -> uiController.handleEnterTimeSheet());
-        approveMakeupBtn.setOnAction(e -> AlertHelper.showInfo("Approve Makeup", "Approve pending makeup requests for your building"));
-        viewMakeupBtn.setOnAction(e -> AlertHelper.showInfo("Makeup Requests", "View all pending makeup requests"));
+        approveMakeupBtn.setOnAction(e -> openApproveDialog());
+        viewMakeupBtn.setOnAction(e -> openMakeupRequestsDialog());
         
         HBox primaryActions = new HBox(10, enterTimeSheetBtn, approveMakeupBtn, viewMakeupBtn);
         primaryActions.setPadding(new Insets(10));
@@ -95,6 +95,65 @@ public class AttendantView {
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
         
         return controlBox;
+    }
+    
+    private void openApproveDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Approve Makeup Requests");
+        dialog.setHeaderText("Approve pending makeup requests for " + user.getBuilding());
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        ListView<String> requestList = new ListView<>();
+        requestList.getItems().addAll(
+            "Makeup for CS101 - Pending approval",
+            "Makeup for CS102 - Pending approval",
+            "Makeup for CS103 - Pending approval"
+        );
+        requestList.setPrefHeight(200);
+        
+        content.getChildren().addAll(
+            new Label("Pending requests for " + user.getBuilding() + ":"),
+            requestList
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        dialog.showAndWait().ifPresent(result -> {
+            int selected = requestList.getSelectionModel().getSelectedIndex();
+            if (selected >= 0) {
+                AlertHelper.showSuccess("Approved", "Makeup request approved");
+            }
+        });
+    }
+    
+    private void openMakeupRequestsDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Makeup Requests");
+        dialog.setHeaderText("All makeup requests for " + user.getBuilding());
+        
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(15));
+        
+        ListView<String> allRequests = new ListView<>();
+        allRequests.getItems().addAll(
+            "CS101 - Pending",
+            "CS102 - Approved",
+            "CS103 - Pending",
+            "CS104 - Rejected"
+        );
+        allRequests.setPrefHeight(250);
+        
+        content.getChildren().addAll(
+            new Label("Total requests: 4"),
+            allRequests
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
     }
     
     private void logout() {

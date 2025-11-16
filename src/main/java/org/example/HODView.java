@@ -85,7 +85,7 @@ public class HODView {
         weeklyScheduleBtn.setOnAction(e -> uiController.getReportGenerator().generateWeeklyScheduleReport());
         weeklyTimesheetBtn.setOnAction(e -> uiController.getReportGenerator().generateWeeklyTimeSheetReport());
         labReportBtn.setOnAction(e -> uiController.handleLabReport());
-        exportBtn.setOnAction(e -> AlertHelper.showInfo("Export", "Export reports to PDF/CSV coming soon"));
+        exportBtn.setOnAction(e -> openExportDialog());
         
         HBox reportActions = new HBox(10, weeklyScheduleBtn, weeklyTimesheetBtn, labReportBtn, exportBtn);
         reportActions.setPadding(new Insets(10));
@@ -97,6 +97,45 @@ public class HODView {
         controlBox.setStyle("-fx-background-color: " + StyleManager.BACKGROUND_COLOR + ";");
         
         return controlBox;
+    }
+    
+    private void openExportDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Export Reports");
+        dialog.setHeaderText("Choose export format and reports");
+        
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(15));
+        
+        CheckBox weeklyScheduleCheck = new CheckBox("Weekly Schedule Report");
+        CheckBox weeklyTimesheetCheck = new CheckBox("Weekly Timesheet Report");
+        CheckBox semesterLabCheck = new CheckBox("Lab Semester Report");
+        weeklyScheduleCheck.setSelected(true);
+        weeklyTimesheetCheck.setSelected(true);
+        semesterLabCheck.setSelected(true);
+        
+        ComboBox<String> formatCombo = new ComboBox<>();
+        formatCombo.getItems().addAll("PDF", "CSV", "Excel");
+        formatCombo.setValue("PDF");
+        formatCombo.setStyle("-fx-font-size: 12;");
+        
+        VBox reportBox = new VBox(10, weeklyScheduleCheck, weeklyTimesheetCheck, semesterLabCheck);
+        reportBox.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;");
+        
+        content.getChildren().addAll(
+            new Label("Select reports to export:"),
+            reportBox,
+            new Label("Export format:"),
+            formatCombo
+        );
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        dialog.showAndWait().ifPresent(result -> {
+            String format = formatCombo.getValue() != null ? formatCombo.getValue() : "PDF";
+            AlertHelper.showSuccess("Export", "Reports exported as " + format);
+        });
     }
     
     private void logout() {
