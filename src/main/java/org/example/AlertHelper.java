@@ -12,6 +12,13 @@ public class AlertHelper {
      * Displays a success/information alert.
      */
     public static void showSuccess(String title, String message) {
+        showInfo(title, message);
+    }
+    
+    /**
+     * Displays an information alert.
+     */
+    public static void showInfo(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);

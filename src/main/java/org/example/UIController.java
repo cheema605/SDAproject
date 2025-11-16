@@ -8,7 +8,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Priority;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * UIController manages all UI control logic and event handling.
@@ -201,14 +200,14 @@ public class UIController {
         }
     }
     
-    private void handleAddLab() {
+    public void handleAddLab() {
         dialogFactory.createAddLabDialog().showAndWait().ifPresent(lab -> {
             labs.add(lab);
             AlertHelper.showSuccess("Lab Created", "Lab '" + lab.getName() + "' has been created successfully");
         });
     }
     
-    private void handleAssignStaff() {
+    public void handleAssignStaff() {
         Lab sel = dialogFactory.createSelectLabDialog();
         if (sel == null) return;
 
@@ -224,7 +223,7 @@ public class UIController {
         });
     }
 
-    private void handleEnterTimeSheet() {
+    public void handleEnterTimeSheet() {
         Lab sel = dialogFactory.createSelectLabDialog();
         if (sel == null) return;
         
@@ -234,7 +233,7 @@ public class UIController {
         });
     }
 
-    private void handleRequestMakeup() {
+    public void handleRequestMakeup() {
         Lab sel = dialogFactory.createSelectLabDialog();
         if (sel == null) return;
         
@@ -252,7 +251,7 @@ public class UIController {
         });
     }
 
-    private void handleLabReport() {
+    public void handleLabReport() {
         Lab sel = dialogFactory.createSelectLabDialog();
         if (sel != null) {
             reportGenerator.generateLabTimeSheetReport(sel);
@@ -262,5 +261,9 @@ public class UIController {
     private void refreshTable() {
         labs.clear();
         labs.addAll(dataStore.getLabs());
+    }
+    
+    public ReportGenerator getReportGenerator() {
+        return reportGenerator;
     }
 }
