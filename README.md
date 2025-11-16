@@ -103,24 +103,68 @@ pom.xml                            # Maven config with JavaFX dependencies
 
 ### Prerequisites
 - JDK 23 or higher
-- Maven (or use IntelliJ-bundled Maven)
 - JavaFX 25
+
+### Setup (First Time Only)
+
+The project includes **Maven Wrapper** (mvnw) which downloads and manages Maven automatically. No need to install Maven separately.
+
+**Windows:**
+```cmd
+setup.cmd
+```
+
+**Linux/Mac:**
+```bash
+bash setup.sh
+```
+
+These scripts will:
+1. Auto-detect your Java installation
+2. Configure the JAVA_HOME environment variable
+3. Verify Maven wrapper is ready
 
 ### Build
 
 ```bash
-cd c:\Users\ammar\IdeaProjects\SDAProject
-mvn clean compile
+# Windows:
+.\mvnw.cmd clean compile
+
+# Linux/Mac:
+./mvnw clean compile
 ```
 
 ### Run the UI
 
 ```bash
-# Using IntelliJ-bundled Maven
-&"C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2025.2.4\plugins\maven\lib\maven3\bin\mvn.cmd" javafx:run
+# Windows:
+.\mvnw.cmd javafx:run
 
-# Or if mvn is on PATH:
-mvn javafx:run
+# Linux/Mac:
+./mvnw javafx:run
+```
+
+### Run Tests
+
+```bash
+# Windows:
+.\mvnw.cmd test
+
+# Linux/Mac:
+./mvnw test
+```
+
+### Manual Maven Commands
+
+You can run any Maven command with the wrapper:
+```bash
+# Windows:
+.\mvnw.cmd clean install
+.\mvnw.cmd package
+
+# Linux/Mac:
+./mvnw clean install
+./mvnw package
 ```
 
 The JavaFX window will open with a table of labs and buttons for:
