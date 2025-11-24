@@ -3,18 +3,22 @@ package org.example;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// Schedule class
 public class Schedule implements Serializable {
     private static final long serialVersionUID = 1L;
     private LocalDateTime expectedStart;
     private LocalDateTime expectedEnd;
 
-    public Schedule() {}
+    // constructor
+    public Schedule() {
+    }
 
     public Schedule(LocalDateTime expectedStart, LocalDateTime expectedEnd) {
         this.expectedStart = expectedStart;
         this.expectedEnd = expectedEnd;
     }
 
+    // getters and setters
     public LocalDateTime getExpectedStart() {
         return expectedStart;
     }

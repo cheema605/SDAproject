@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+// Lab class
 public class Lab implements Serializable {
     private static final long serialVersionUID = 1L;
     private String id;
@@ -14,13 +15,16 @@ public class Lab implements Serializable {
     private Schedule schedule;
     private java.util.List<TimeSheet> sessions = new java.util.ArrayList<>();
 
-    public Lab() {}
+    // constructor
+    public Lab() {
+    }
 
     public Lab(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
+    // getters and setters
     public String getId() {
         return id;
     }
@@ -50,7 +54,8 @@ public class Lab implements Serializable {
     }
 
     public void addTA(TA ta) {
-        if (!tas.contains(ta)) tas.add(ta);
+        if (!tas.contains(ta))
+            tas.add(ta);
     }
 
     public void removeTA(TA ta) {
@@ -70,9 +75,11 @@ public class Lab implements Serializable {
     }
 
     public void addSession(TimeSheet ts) {
-        if (ts != null) sessions.add(ts);
+        if (ts != null)
+            sessions.add(ts);
     }
 
+    // calculate total hours
     public double totalContactHours() {
         double total = 0.0;
         for (TimeSheet t : sessions) {
@@ -83,10 +90,12 @@ public class Lab implements Serializable {
         return total;
     }
 
+    // count leaves
     public long leavesCount() {
         long cnt = 0;
         for (TimeSheet t : sessions) {
-            if (t.getActualStart() == null || t.getActualEnd() == null) cnt++;
+            if (t.getActualStart() == null || t.getActualEnd() == null)
+                cnt++;
         }
         return cnt;
     }

@@ -1,8 +1,6 @@
 package org.example;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 public class AcademicOfficer {
     private DataStore dataStore;
@@ -11,7 +9,8 @@ public class AcademicOfficer {
         this.dataStore = dataStore;
     }
 
-    public Lab createLab(String id, String name, String building, String room, LocalDateTime schedStart, LocalDateTime schedEnd) {
+    public Lab createLab(String id, String name, String building, String room, LocalDateTime schedStart,
+            LocalDateTime schedEnd) {
         Lab lab = new Lab(id, name);
         lab.setVenue(new Venue(building, room));
         lab.setSchedule(new Schedule(schedStart, schedEnd));
@@ -51,10 +50,13 @@ public class AcademicOfficer {
     }
 
     private Lab findLab(String labId) {
-        return dataStore.getLabs().stream()
-                .filter(l -> l.getId().equals(labId))
-                .findFirst()
-                .orElse(null);
+        // manual loop instead of stream
+        for (Lab l : dataStore.getLabs()) {
+            if (l.getId().equals(labId)) {
+                return l;
+            }
+        }
+        return null;
     }
 
     public DataStore getDataStore() {
